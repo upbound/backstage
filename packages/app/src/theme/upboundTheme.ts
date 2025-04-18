@@ -4,7 +4,6 @@ import {
     genPageTheme,
     defaultTypography,
     palettes,
-    shapes,
   } from '@backstage/theme';
   
   export const upboundTheme = createUnifiedTheme({
