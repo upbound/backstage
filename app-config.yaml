@@ -108,9 +108,88 @@ catalog:
   useUrlReadersSearch: true
 
 kubernetes:
-  # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options
+  frontend:
+    podDelete:
+      enabled: true
+  serviceLocatorMethod:
+    type: multiTenant
+  clusterLocatorMethods:
+  - type: config
+    clusters:
+    - url: ${PORTAL_CONTROL_PLANE_URL}
+      name: ${PORTAL_CONTROL_PLANE_NAME}
+      authProvider: serviceAccount
+      skipTLSVerify: false
+      skipMetricsLookup: true
+      serviceAccountToken: ${PORTAL_CONTROL_PLANE_SA}
+      caData: ${PORTAL_CONTROL_PLANE_CA_DATA}
 
 # see https://backstage.io/docs/permissions/getting-started for more on the permission framework
 permission:
   # setting this to `false` will disable permissions
   enabled: true
+
+crossplane:
+  enablePermissions: false
+kubernetesIngestor:
+  components:
+    enabled: true
+    taskRunner:
+      frequency: 10
+      timeout: 600
+    excludedNamespaces:
+    - kube-public
+    - kube-system
+    - crossplane-system
+    customWorkloadTypes:
+      - group: ai.idp.upbound.io
+        apiVersion: v1alpha1
+        plural: modelclaims
+      - group: compute.idp.upbound.io
+        apiVersion: v1alpha1
+        plural: applicationclaims
+      - group: compute.idp.upbound.io
+        apiVersion: v1alpha1
+        plural: clusterclaims
+      - group: compute.idp.upbound.io
+        apiVersion: v1alpha1
+        plural: functionclaims
+      - group: compute.idp.upbound.io
+        apiVersion: v1alpha1
+        plural: virtualmachineclaims
+      - group: db.idp.upbound.io
+        apiVersion: v1alpha1
+        plural: sqlinstanceclaims
+      - group: iam.idp.upbound.io
+        apiVersion: v1alpha1
+        plural: accountclaims
+      - group: iam.idp.upbound.io
+        apiVersion: v1alpha1
+        plural: serviceaccountclaims
+      - group: networking.idp.upbound.io
+        apiVersion: v1alpha1
+        plural: networkclaims
+      - group: networking.idp.upbound.io
+        apiVersion: v1alpha1
+        plural: subnetclaims
+      - group: storage.idp.upbound.io
+        apiVersion: v1alpha1
+        plural: bucketclaims
+    disableDefaultWorkloadTypes: true
+    onlyIngestAnnotatedResources: false
+  crossplane:
+    claims:
+      ingestAllClaims: true
+    xrds:
+      publishPhase:
+        allowRepoSelection: false
+      enabled: true
+      taskRunner:
+        frequency: 10
+        timeout: 600
+      ingestAllXRDs: true
+      convertDefaultValuesToPlaceholders: true
+  genericCRDTemplates:
+    crdLabelSelector:
+      key: internal.scheduling.upbound.io/remote
+      value: "true"

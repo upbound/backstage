@@ -50,5 +50,10 @@
       "prettier --write"
     ]
   },
-  "packageManager": "yarn@4.4.1"
+  "packageManager": "yarn@4.4.1",
+  "dependencies": {
+    "@terasky/backstage-plugin-kubernetes-ingestor": "^1.11.1",
+    "@types/pluralize": "^0.0.33",
+    "fs-extra": "^11.3.0"
+  }
 }
