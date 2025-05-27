@@ -7209,6 +7209,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@internal/plugin-kubernetes-ingestor@workspace:^, @internal/plugin-kubernetes-ingestor@workspace:plugins/kubernetes-ingestor":
+  version: 0.0.0-use.local
+  resolution: "@internal/plugin-kubernetes-ingestor@workspace:plugins/kubernetes-ingestor"
+  dependencies:
+    "@backstage/backend-plugin-api": "npm:^1.3.0"
+    "@backstage/backend-test-utils": "npm:^1.4.0"
+    "@backstage/cli": "npm:^0.32.0"
+  languageName: unknown
+  linkType: soft
+
 "@internationalized/date@npm:^3.8.0":
   version: 3.8.0
   resolution: "@internationalized/date@npm:3.8.0"
@@ -15211,6 +15221,7 @@ __metadata:
     "@backstage/plugin-search-backend-module-techdocs": "npm:^0.4.1"
     "@backstage/plugin-search-backend-node": "npm:^1.3.10"
     "@backstage/plugin-techdocs-backend": "npm:^2.0.1"
+    "@internal/plugin-kubernetes-ingestor": "workspace:^"
     "@terasky/backstage-plugin-crossplane-permissions-backend": "npm:^1.1.9"
     "@terasky/backstage-plugin-kubernetes-ingestor": "npm:^1.12.1"
     "@terasky/backstage-plugin-scaffolder-backend-module-terasky-utils": "npm:^1.4.2"
