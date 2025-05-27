@@ -40,6 +40,8 @@
     "@backstage/plugin-search-backend-module-techdocs": "^0.4.1",
     "@backstage/plugin-search-backend-node": "^1.3.10",
     "@backstage/plugin-techdocs-backend": "^2.0.1",
+    "@internal/plugin-kubernetes-backend-module-upbound": "workspace:^",
+    "@internal/plugin-kubernetes-ingestor": "workspace:^",
     "@terasky/backstage-plugin-crossplane-permissions-backend": "^1.1.9",
     "@terasky/backstage-plugin-kubernetes-ingestor": "^1.12.1",
     "@terasky/backstage-plugin-scaffolder-backend-module-terasky-utils": "^1.4.2",

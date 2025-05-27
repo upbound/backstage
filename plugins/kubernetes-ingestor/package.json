@@ -1,9 +1,9 @@
 {
-  "name": "@internal/plugin-kubernetes-backend-module-upbound",
+  "name": "@internal/plugin-kubernetes-ingestor",
   "version": "0.1.0",
   "license": "Apache-2.0",
   "private": true,
-  "description": "The upbound backend module for the kubernetes plugin.",
+  "description": "The backstage-plugin-kubernetes-ingestor backend module for the catalog plugin.",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "publishConfig": {

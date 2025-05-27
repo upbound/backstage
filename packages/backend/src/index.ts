@@ -29,7 +29,8 @@ backend.add(import('@internal/plugin-kubernetes-backend-module-upbound'));
 
 // terasky
 backend.add(import('@terasky/backstage-plugin-crossplane-permissions-backend'));
-backend.add(import('@terasky/backstage-plugin-kubernetes-ingestor'));
+backend.add(import('@internal/plugin-kubernetes-ingestor'));
+// backend.add(import('@terasky/backstage-plugin-kubernetes-ingestor'));
 backend.add(import('@terasky/backstage-plugin-scaffolder-backend-module-terasky-utils'));
 
 // catalog plugin
