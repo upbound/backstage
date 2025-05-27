@@ -6,3 +6,4 @@
 
 export { kubernetesModuleUpbound } from './module';
 export { default } from './module';
+export { UpboundStrategy } from './UpboundStrategy';

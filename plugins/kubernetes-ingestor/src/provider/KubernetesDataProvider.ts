@@ -23,7 +23,7 @@ type ObjectToFetch = {
 };
 
 // Add new type definitions for auth providers
-type AuthProvider = 'serviceAccount' | 'google' | 'aws' | 'azure' | 'oidc';
+type AuthProvider = 'serviceAccount' | 'google' | 'aws' | 'azure' | 'oidc' | 'upbound';
 
 // Extend ClusterDetails to include authProvider
 interface ExtendedClusterDetails extends ClusterDetails {
@@ -67,6 +67,14 @@ export class KubernetesDataProvider {
         permissions: this.permissions,
         discovery: this.discovery,
       });
+
+      const globalAuthStrategies = (global as any).kubernetesAuthStrategies;
+      if (globalAuthStrategies) {
+        for (const [key, strategy] of globalAuthStrategies) {
+          this.logger.debug(`Adding auth strategy: ${key}`);
+          builder.addAuthStrategy(key, strategy);
+        }
+      }
 
       const { fetcher, clusterSupplier } = await builder.build();
 
@@ -414,6 +422,14 @@ export class KubernetesDataProvider {
         permissions: this.permissions,
         discovery: this.discovery,
       });
+
+      const globalAuthStrategies = (global as any).kubernetesAuthStrategies;
+      if (globalAuthStrategies) {
+        for (const [key, strategy] of globalAuthStrategies) {
+          this.logger.debug(`Adding auth strategy: ${key}`);
+          builder.addAuthStrategy(key, strategy);
+        }
+      }
 
       const { fetcher, clusterSupplier } = await builder.build();
 
