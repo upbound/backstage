@@ -7,7 +7,6 @@
  */
 
 import { createBackend } from '@backstage/backend-defaults';
-
 const backend = createBackend();
 
 backend.add(import('@backstage/plugin-app-backend'));
@@ -22,11 +21,20 @@ backend.add(import('@backstage/plugin-auth-backend'));
 backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
 // See https://backstage.io/docs/auth/guest/provider
 
+// kubernetes
+backend.add(import('@backstage/plugin-kubernetes-backend'));
+
+// upbound
+backend.add(import('@internal/plugin-kubernetes-backend-module-upbound'));
+
+// terasky
+backend.add(import('@terasky/backstage-plugin-crossplane-permissions-backend'));
+backend.add(import('@terasky/backstage-plugin-kubernetes-ingestor'));
+backend.add(import('@terasky/backstage-plugin-scaffolder-backend-module-terasky-utils'));
+
 // catalog plugin
 backend.add(import('@backstage/plugin-catalog-backend'));
-backend.add(
-  import('@backstage/plugin-catalog-backend-module-scaffolder-entity-model'),
-);
+backend.add(import('@backstage/plugin-catalog-backend-module-scaffolder-entity-model'));
 
 // See https://backstage.io/docs/features/software-catalog/configuration#subscribing-to-catalog-errors
 backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
@@ -34,9 +42,7 @@ backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
 // permission plugin
 backend.add(import('@backstage/plugin-permission-backend'));
 // See https://backstage.io/docs/permissions/getting-started for how to create your own permission policy
-backend.add(
-  import('@backstage/plugin-permission-backend-module-allow-all-policy'),
-);
+backend.add(import('@backstage/plugin-permission-backend-module-allow-all-policy'));
 
 // search plugin
 backend.add(import('@backstage/plugin-search-backend'));
@@ -48,13 +54,5 @@ backend.add(import('@backstage/plugin-search-backend-module-pg'));
 // search collators
 backend.add(import('@backstage/plugin-search-backend-module-catalog'));
 backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
-
-// kubernetes
-backend.add(import('@backstage/plugin-kubernetes-backend'));
-
-backend.add(import('@terasky/backstage-plugin-crossplane-permissions-backend'));
-backend.add(import('@terasky/backstage-plugin-kubernetes-ingestor'));
-backend.add(import('@terasky/backstage-plugin-scaffolder-backend-module-terasky-utils'));
-
 
 backend.start();
