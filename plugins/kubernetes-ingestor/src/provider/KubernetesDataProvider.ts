@@ -23,7 +23,7 @@ type ObjectToFetch = {
 };
 
 // Add new type definitions for auth providers
-type AuthProvider = 'serviceAccount' | 'google' | 'aws' | 'azure' | 'oidc' | 'upbound';
+type AuthProvider = 'serviceAccount' | 'google' | 'aws' | 'azure' | 'oidc';
 
 // Extend ClusterDetails to include authProvider
 interface ExtendedClusterDetails extends ClusterDetails {
