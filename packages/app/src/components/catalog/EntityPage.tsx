@@ -58,6 +58,18 @@ import {
   isKubernetesAvailable,
 } from '@backstage/plugin-kubernetes';
 
+// Crossplane imports
+import {
+  CrossplaneAllResourcesTable,
+  CrossplaneResourceGraph,
+  CrossplaneOverviewCard,
+  useResourceGraphAvailable,
+  useResourcesListAvailable,
+  IfCrossplaneOverviewAvailable,
+  IfCrossplaneResourceGraphAvailable,
+  IfCrossplaneResourcesListAvailable,
+} from '@terasky/backstage-plugin-crossplane-resources-frontend';
+
 const techdocsContent = (
   <EntityTechdocsContent>
     <TechDocsAddons>
@@ -243,6 +255,57 @@ const defaultEntityPage = (
   </EntityLayout>
 );
 
+// Create the Crossplane entity page component with permission checks
+const CrossplaneEntityPage = () => {
+  const isResourcesListAvailable = useResourcesListAvailable();
+  const isResourceGraphAvailable = useResourceGraphAvailable();
+
+  return (
+    <EntityLayout>
+      <EntityLayout.Route path="/" title="Overview">
+        <Grid container spacing={3} alignItems="stretch">
+          {entityWarningContent}
+          <Grid item md={6}>
+            <EntityAboutCard variant="gridItem" />
+          </Grid>
+          <IfCrossplaneOverviewAvailable>
+            <Grid item md={6}>
+              <CrossplaneOverviewCard />
+            </Grid>
+          </IfCrossplaneOverviewAvailable>
+          <Grid item md={4} xs={12}>
+            <EntityLinksCard />
+          </Grid>
+        </Grid>
+      </EntityLayout.Route>
+
+      <EntityLayout.Route
+        if={isResourcesListAvailable}
+        path="/crossplane-resources"
+        title="Crossplane Resources"
+      >
+        <IfCrossplaneResourcesListAvailable>
+          <CrossplaneAllResourcesTable />
+        </IfCrossplaneResourcesListAvailable>
+      </EntityLayout.Route>
+
+      <EntityLayout.Route
+        if={isResourceGraphAvailable}
+        path="/crossplane-graph"
+        title="Crossplane Graph"
+      >
+        <IfCrossplaneResourceGraphAvailable>
+          <CrossplaneResourceGraph />
+        </IfCrossplaneResourceGraphAvailable>
+      </EntityLayout.Route>
+
+      <EntityLayout.Route path="/docs" title="Docs">
+        {techdocsContent}
+      </EntityLayout.Route>
+    </EntityLayout>
+  );
+};
+
 const componentPage = (
   <EntitySwitch>
     <EntitySwitch.Case if={isComponentType('service')}>
@@ -251,6 +314,10 @@ const componentPage = (
 
     <EntitySwitch.Case if={isComponentType('website')}>
       {websiteEntityPage}
+    </EntitySwitch.Case>
+
+    <EntitySwitch.Case if={isComponentType('crossplane-claim')}>
+      <CrossplaneEntityPage />
     </EntitySwitch.Case>
 
     <EntitySwitch.Case>{defaultEntityPage}</EntitySwitch.Case>
