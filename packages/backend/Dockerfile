@@ -32,6 +32,30 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends libsqlite3-dev && \
     rm -rf /var/lib/apt/lists/*
 
+# Install Python pip and MkDocs dependencies for TechDocs
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
+        python3-venv \
+        python3-dev \
+        build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create a virtual environment and install MkDocs
+RUN python3 -m venv /opt/mkdocs-venv && \
+    /opt/mkdocs-venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    /opt/mkdocs-venv/bin/pip install --no-cache-dir \
+        mkdocs \
+        mkdocs-material \
+        mkdocs-techdocs-core \
+        pymdown-extensions
+
+# Add the virtual environment to PATH so mkdocs command is available
+ENV PATH="/opt/mkdocs-venv/bin:$PATH"
+
 # From here on we use the least-privileged `node` user to run the backend.
 USER node
 
