@@ -1989,8 +1989,11 @@ import {
           title: titleValue,
           description: `${resource.kind} ${resource.metadata.name} from ${resource.clusterName}`,
           namespace: annotations[`${prefix}/backstage-namespace`] || namespaceValue,
+          links: this.parseBackstageLinks(annotations),
           annotations: {
-            ...annotations,
+            ...Object.fromEntries(
+              Object.entries(annotations).filter(([key]) => key !== 'backstage.io/links')
+            ),
             'terasky.backstage.io/kubernetes-resource-kind': resource.kind,
             'terasky.backstage.io/kubernetes-resource-name': resource.metadata.name,
             'terasky.backstage.io/kubernetes-resource-api-version': resource.apiVersion,
