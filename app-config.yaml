@@ -38,7 +38,7 @@ catalog:
     entityFilename: catalog-info.yaml
     pullRequestBranchName: backstage-integration
   locations:
-  - target: https://gist.githubusercontent.com/haarchri/aaa03c8d30db4b03aa601d59b1a9c066/raw/65044e49acd78e0368955a2ddaff52e53f6a24e4/catalog-info.yaml
+  - target: <git-url>
     type: url
   rules:
   - allow:
@@ -61,13 +61,13 @@ kubernetes:
   clusterLocatorMethods:
   - clusters:
     - authMetadata:
-        upbound.io/organization: upbound-demo
+        upbound.io/organization: <org>
         upbound.io/token: <token>
       authProvider: upbound
       name: solution-idp-non-prod-frontend-frontend
       skipMetricsLookup: true
       skipTLSVerify: true
-      url: <url>
+      url: <cluster>
     type: config
   frontend:
     podDelete:

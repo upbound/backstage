@@ -33,7 +33,7 @@ const dagreGraph = new dagre.graphlib.Graph();
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 
 const nodeWidth = 172;
-const nodeHeight = 36;
+const nodeHeight = 50;
 
 const getLayoutedElements = (nodes: any[], edges: any[]) => {
     dagreGraph.setGraph({ rankdir: 'LR' });
@@ -83,6 +83,39 @@ const CrossplaneResourceGraph = () => {
     const canShowResourceGraph = enablePermissions ? canShowResourceGraphTemp : true;
 
     const generateGraphElements = (resourceList: KubernetesObject[]) => {
+        // Helper function to wrap long kind names
+        const wrapKind = (kind: string, maxLength: number = 15) => {
+            if (kind.length <= maxLength) return kind;
+
+            // Split on camelCase boundaries
+            const parts = kind.split(/(?=[A-Z])/);
+            const lines = [];
+            let currentLine = '';
+
+            for (const part of parts) {
+                if (part.trim() === '') continue;
+
+                const testLine = currentLine + part;
+                if (testLine.length <= maxLength) {
+                    currentLine = testLine;
+                } else {
+                    if (currentLine) {
+                        lines.push(currentLine);
+                        currentLine = part;
+                    } else {
+                        // Part itself is too long, just add it
+                        lines.push(part);
+                    }
+                }
+            }
+
+            if (currentLine) {
+                lines.push(currentLine);
+            }
+
+            return lines.join('\n');
+        };
+
         const nodes = resourceList.map(resource => {
             const status = (resource as any).status;
             const isSynced = status?.conditions?.some((condition: any) => condition.type === 'Synced');
@@ -94,11 +127,23 @@ const CrossplaneResourceGraph = () => {
                 color = 'yellow';
             }
 
+            const resourceName = resource.metadata?.name || 'Unknown';
+            const resourceKind = resource.kind || 'Unknown';
+            const wrappedKind = wrapKind(resourceKind);
+
             return {
                 id: resource.metadata?.uid || `${resource.kind}-${Math.random()}`,
-                data: { label: `${resource.metadata?.name} (${resource.kind})` },
+                data: { label: `${resourceName}\n(${wrappedKind})` },
                 position: { x: 0, y: 0 }, // Initial position, will be updated by dagre layout
-                style: { border: `2px solid ${color}`, backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary },
+                style: {
+                    border: `2px solid ${color}`,
+                    backgroundColor: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
+                    whiteSpace: 'pre-line', // Allow line breaks for the kind
+                    textAlign: 'center',
+                    fontSize: '12px',
+                    padding: '4px'
+                },
             };
         });
 
@@ -143,7 +188,7 @@ const CrossplaneResourceGraph = () => {
             const version = annotations['terasky.backstage.io/claim-version'];
             const labelSelector = annotations['backstage.io/kubernetes-label-selector'];
             const namespace = labelSelector.split(',').find(s => s.startsWith('crossplane.io/claim-namespace'))?.split('=')[1];
-            const crdMap: { [name: string]: any } = {};
+            const crdMap: Map<string, any> = new Map();
 
             try {
                 const response = await kubernetesApi.proxy({
@@ -163,17 +208,22 @@ const CrossplaneResourceGraph = () => {
                     group.versions.forEach((version: any) => {
                         version.resources.forEach((resource: any) => {
                             if (resource.categories?.some((category: string) => ['crossplane', 'managed', 'composite', 'claim'].includes(category))) {
-                                crdMap[resource.resource] = {
+                                // Use composite key to prevent collisions between same resource names in different groups
+                                const resourceKey = `${group.metadata.name}/${version.version}/${resource.resource}`;
+                                crdMap.set(resourceKey, {
                                     group: group.metadata.name,
                                     apiVersion: version.version,
                                     plural: resource.resource,
-                                };
+                                });
                             }
                         });
                     });
                 });
 
-                const customResources = Object.values(crdMap);
+                const customResources = Array.from(crdMap.values());
+
+                console.log('Discovered custom resources:', customResources.length);
+                console.log('Resource types:', customResources.map(r => `${r.group}/${r.apiVersion}/${r.plural}`));
 
                 const resourcesResponse = await kubernetesApi.getCustomObjectsByEntity({
                     entity,
@@ -184,6 +234,10 @@ const CrossplaneResourceGraph = () => {
                 const allResources = resourcesResponse.items.flatMap(item =>
                     item.resources.flatMap(resourceGroup => resourceGroup.resources)
                 ).filter(resource => resource);
+
+                console.log('Fetched resources:', allResources.length);
+                console.log('Resource details:', allResources.map(r => `${r.kind}/${r.metadata?.name} (${(r as any).apiVersion})`));
+
                 // Fetch the claim resource
                 const resourceName = claimName;
                 const url = `/apis/${group}/${version}/namespaces/${namespace}/${plural}/${resourceName}`;
@@ -196,14 +250,16 @@ const CrossplaneResourceGraph = () => {
                     });
                     const claimResource = await response.json();
                     allResources.push(claimResource);
+                    console.log('Added claim resource:', claimResource.kind, claimResource.metadata?.name);
                 } catch (error) {
-                    throw error
+                    console.error('Failed to fetch claim resource:', error);
                 }
 
                 setResources(allResources);
                 generateGraphElements(allResources);
             } catch (error) {
-                throw error
+                console.error('Failed to fetch resources:', error);
+                throw error;
             } finally {
                 setLoading(false);
             }
@@ -212,13 +268,13 @@ const CrossplaneResourceGraph = () => {
         fetchResources();
     }, [kubernetesApi, entity, canShowResourceGraph]);
 
-
     const handleGetEvents = async (resource: KubernetesObject) => {
         const namespace = resource.metadata?.namespace || 'default';
         const name = resource.metadata?.name;
         const clusterOfClaim = entity.metadata.annotations?.['backstage.io/managed-by-location'].split(": ")[1];
 
         if (!namespace || !name || !clusterOfClaim) {
+            console.warn('Missing required data for fetching events:', { namespace, name, clusterOfClaim });
             return;
         }
 
@@ -231,9 +287,10 @@ const CrossplaneResourceGraph = () => {
                 init: { method: 'GET' },
             });
             const eventsResponse = await response.json();
-            setEvents(eventsResponse.items);
+            setEvents(eventsResponse.items || []);
         } catch (error) {
-            throw error;
+            console.error('Failed to fetch events:', error);
+            setEvents([]);
         }
     };
 
@@ -316,28 +373,32 @@ const CrossplaneResourceGraph = () => {
                             </Box>
                             <Typography variant="h4" gutterBottom>Kubernetes Events</Typography>
                             <Box style={{ maxHeight: '40em', overflow: 'auto', border: '1px solid #ccc', padding: '8px' }}>
-                                <Table>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Type</TableCell>
-                                            <TableCell>Reason</TableCell>
-                                            <TableCell>Message</TableCell>
-                                            <TableCell>First Seen</TableCell>
-                                            <TableCell>Last Seen</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {events.map(event => (
-                                            <TableRow key={event.metadata?.uid}>
-                                                <TableCell>{event.type}</TableCell>
-                                                <TableCell>{event.reason}</TableCell>
-                                                <TableCell>{event.message}</TableCell>
-                                                <TableCell>{event.firstTimestamp}</TableCell>
-                                                <TableCell>{event.lastTimestamp}</TableCell>
+                                {events.length > 0 ? (
+                                    <Table>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>Type</TableCell>
+                                                <TableCell>Reason</TableCell>
+                                                <TableCell>Message</TableCell>
+                                                <TableCell>First Seen</TableCell>
+                                                <TableCell>Last Seen</TableCell>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHead>
+                                        <TableBody>
+                                            {events.map((event, index) => (
+                                                <TableRow key={event.metadata?.uid || index}>
+                                                    <TableCell>{event.type}</TableCell>
+                                                    <TableCell>{event.reason}</TableCell>
+                                                    <TableCell>{event.message}</TableCell>
+                                                    <TableCell>{event.firstTimestamp}</TableCell>
+                                                    <TableCell>{event.lastTimestamp}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                ) : (
+                                    <Typography>No events found for this resource</Typography>
+                                )}
                             </Box>
                         </>
                     )}
