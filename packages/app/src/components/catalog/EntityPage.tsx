@@ -68,7 +68,7 @@ import {
   IfCrossplaneOverviewAvailable,
   IfCrossplaneResourceGraphAvailable,
   IfCrossplaneResourcesListAvailable,
-} from '@terasky/backstage-plugin-crossplane-resources-frontend';
+} from '@internal/plugin-crossplane-resources';
 
 const techdocsContent = (
   <EntityTechdocsContent>

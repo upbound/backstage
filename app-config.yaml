@@ -2,194 +2,155 @@ app:
   title: Scaffolded Backstage App
   baseUrl: http://localhost:3000
 
-organization:
-  name: My Company
-
+auth:
+  environment: development
+  providers:
+    guest:
+      dangerouslyAllowOutsideDevelopment: true
+      ownershipEntityRefs:
+      - group:default/smith-family
+      userEntityRef: user:default/john-smith
 backend:
-  # Used for enabling authentication, secret is shared by all backend plugins
-  # See https://backstage.io/docs/auth/service-to-service-auth for
-  # information on the format
-  # auth:
-  #   keys:
-  #     - secret: ${BACKEND_SECRET}
   baseUrl: http://localhost:7007
-  listen:
-    port: 7007
-    # Uncomment the following host directive to bind to specific interfaces
-    # host: 127.0.0.1
-  csp:
-    connect-src: ["'self'", 'http:', 'https:']
-    # Content-Security-Policy directives follow the Helmet format: https://helmetjs.github.io/#reference
-    # Default Helmet Content-Security-Policy values can be removed by setting the key to false
   cors:
-    origin: http://localhost:3000
-    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
     credentials: true
-  # This is for local development only, it is not recommended to use this in production
-  # The production database configuration is stored in app-config.production.yaml
+    methods:
+    - GET
+    - HEAD
+    - PATCH
+    - POST
+    - PUT
+    - DELETE
+    origin:
+    - http://localhost:3000
+    - http://localhost:7007
+  reading:
+    allow:
+    - host: gist.githubusercontent.com
+    - host: raw.githubusercontent.com
+    - host: github.com
+    - host: '*.github.com'
   database:
     client: better-sqlite3
     connection: ':memory:'
-  # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
-
-integrations:
-  github:
-    - host: github.com
-      # This is a Personal Access Token or PAT from GitHub. You can find out how to generate this token, and more information
-      # about setting up the GitHub integration here: https://backstage.io/docs/integrations/github/locations#configuration
-      token: ${GITHUB_TOKEN}
-    ### Example for how to add your GitHub Enterprise instance using the API:
-    # - host: ghe.example.net
-    #   apiBaseUrl: https://ghe.example.net/api/v3
-    #   token: ${GHE_TOKEN}
-
-proxy:
-  ### Example for how to add a proxy endpoint for the frontend.
-  ### A typical reason to do this is to handle HTTPS and CORS for internal services.
-  # endpoints:
-  #   '/test':
-  #     target: 'https://example.com'
-  #     changeOrigin: true
-
-# Reference documentation http://backstage.io/docs/features/techdocs/configuration
-# Note: After experimenting with basic setup, use CI/CD to generate docs
-# and an external cloud storage when deploying TechDocs for production use-case.
-# https://backstage.io/docs/features/techdocs/how-to-guides#how-to-migrate-from-techdocs-basic-to-recommended-deployment-approach
-techdocs:
-  builder: 'local' # Alternatives - 'external'
-  generator:
-    runIn: 'docker' # Alternatives - 'local'
-  publisher:
-    type: 'local' # Alternatives - 'googleGcs' or 'awsS3'. Read documentation for using alternatives.
-
-auth:
-  # see https://backstage.io/docs/auth/ to learn about auth providers
-  providers:
-    # See https://backstage.io/docs/auth/guest/provider
-    guest: {}
-
-scaffolder:
-  # see https://backstage.io/docs/features/software-templates/configuration for software template options
-
 catalog:
   import:
     entityFilename: catalog-info.yaml
     pullRequestBranchName: backstage-integration
-  rules:
-    - allow: [Component, System, API, Resource, Location]
   locations:
-    # Local example data, file locations are relative to the backend process, typically `packages/backend`
-    - type: file
-      target: ../../examples/entities.yaml
-
-    # Local example template
-    - type: file
-      target: ../../examples/template/template.yaml
-      rules:
-        - allow: [Template]
-
-    # Local example organizational data
-    - type: file
-      target: ../../examples/org.yaml
-      rules:
-        - allow: [User, Group]
-
-    ## Uncomment these lines to add more example data
-    # - type: url
-    #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all.yaml
-
-    ## Uncomment these lines to add an example org
-    # - type: url
-    #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/acme-corp.yaml
-    #   rules:
-    #     - allow: [User, Group]
-  # Experimental: Always use the search method in UrlReaderProcessor.
-  # New adopters are encouraged to enable it as this behavior will be the default in a future release.
+  - target: https://gist.githubusercontent.com/haarchri/aaa03c8d30db4b03aa601d59b1a9c066/raw/65044e49acd78e0368955a2ddaff52e53f6a24e4/catalog-info.yaml
+    type: url
+  rules:
+  - allow:
+    - Component
+    - System
+    - API
+    - Resource
+    - Location
   useUrlReadersSearch: true
-
+crossplane:
+  enablePermissions: false
+# integrations:
+#   github:
+#   - host: github.com
+#     token: ${GITHUB_TOKEN}
 kubernetes:
+  auth:
+    providers:
+      upbound: {}
+  clusterLocatorMethods:
+  - clusters:
+    - authMetadata:
+        upbound.io/organization: upbound-demo
+        upbound.io/token: <token>
+      authProvider: upbound
+      name: solution-idp-non-prod-frontend-frontend
+      skipMetricsLookup: true
+      skipTLSVerify: true
+      url: <url>
+    type: config
   frontend:
     podDelete:
       enabled: true
+  objectTypes:
+  - configmaps
+  - deployments
+  - pods
+  - services
   serviceLocatorMethod:
     type: multiTenant
-  clusterLocatorMethods:
-  - type: config
-    clusters:
-    - url: ${PORTAL_CONTROL_PLANE_URL}
-      name: ${PORTAL_CONTROL_PLANE_NAME}
-      authProvider: serviceAccount
-      skipTLSVerify: false
-      skipMetricsLookup: true
-      serviceAccountToken: ${PORTAL_CONTROL_PLANE_SA}
-      caData: ${PORTAL_CONTROL_PLANE_CA_DATA}
-
-# see https://backstage.io/docs/permissions/getting-started for more on the permission framework
-permission:
-  # setting this to `false` will disable permissions
-  enabled: true
-
-crossplane:
-  enablePermissions: false
+  skipMetricsLookup: true
 kubernetesIngestor:
   components:
+    customWorkloadTypes:
+    - apiVersion: v1alpha1
+      group: aws.platform.upbound.io
+      plural: xeks
+      singular: xeks
+    - apiVersion: v1alpha1
+      group: aws.platform.upbound.io
+      plural: xnetworks
+      singular: XNetwork
+    - apiVersion: v1alpha1
+      group: aws.platform.upbound.io
+      plural: xpodidentities
+      singular: xpodidentity
+    - apiVersion: v1
+      group: pkg.crossplane.io
+      plural: providers
+    - apiVersion: v1alpha1
+      group: platform.upbound.io
+      plural: xsqlinstances
+      singular: XSQLInstance
+    - apiVersion: v1alpha1
+      group: aws.platform.upbound.io
+      plural: xsqlinstances
+      singular: XSQLInstance
+    - apiVersion: v1alpha1
+      group: azure.platform.upbound.io
+      plural: xsqlinstances
+      singular: XSQLInstance
+    - apiVersion: v1alpha1
+      group: azure.platform.upbound.io
+      plural: xnetworks
+      singular: XNetwork
+    disableDefaultWorkloadTypes: true
     enabled: true
-    taskRunner:
-      frequency: 10
-      timeout: 600
     excludedNamespaces:
     - kube-public
     - kube-system
     - crossplane-system
-    customWorkloadTypes:
-      - group: ai.idp.upbound.io
-        apiVersion: v1alpha1
-        plural: modelclaims
-      - group: compute.idp.upbound.io
-        apiVersion: v1alpha1
-        plural: applicationclaims
-      - group: compute.idp.upbound.io
-        apiVersion: v1alpha1
-        plural: clusterclaims
-      - group: compute.idp.upbound.io
-        apiVersion: v1alpha1
-        plural: functionclaims
-      - group: compute.idp.upbound.io
-        apiVersion: v1alpha1
-        plural: virtualmachineclaims
-      - group: db.idp.upbound.io
-        apiVersion: v1alpha1
-        plural: sqlinstanceclaims
-      - group: iam.idp.upbound.io
-        apiVersion: v1alpha1
-        plural: accountclaims
-      - group: iam.idp.upbound.io
-        apiVersion: v1alpha1
-        plural: serviceaccountclaims
-      - group: networking.idp.upbound.io
-        apiVersion: v1alpha1
-        plural: networkclaims
-      - group: networking.idp.upbound.io
-        apiVersion: v1alpha1
-        plural: subnetclaims
-      - group: storage.idp.upbound.io
-        apiVersion: v1alpha1
-        plural: bucketclaims
-    disableDefaultWorkloadTypes: true
     onlyIngestAnnotatedResources: false
+    taskRunner:
+      frequency: 10
+      timeout: 600
   crossplane:
     claims:
       ingestAllClaims: true
     xrds:
+      convertDefaultValuesToPlaceholders: true
+      enabled: true
+      ingestAllXRDs: true
       publishPhase:
         allowRepoSelection: false
-      enabled: true
+        allowedTargets:
+        - github.com
+        git:
+          repoUrl: github.com?owner=upbound&repo=solution-idp
+          targetBranch: local-test
+        target: github
       taskRunner:
         frequency: 10
         timeout: 600
-      ingestAllXRDs: true
-      convertDefaultValuesToPlaceholders: true
-  genericCRDTemplates:
-    crdLabelSelector:
-      key: internal.scheduling.upbound.io/remote
-      value: "true"
+  mappings:
+    systemModel: cluster-namespace
+organization:
+  name: upbound
+permission:
+  enabled: false
+techdocs:
+  builder: local
+  generator:
+    runIn: local
+  publisher:
+    type: local
