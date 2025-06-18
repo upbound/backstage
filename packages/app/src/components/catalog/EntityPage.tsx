@@ -265,15 +265,17 @@ const CrossplaneEntityPage = () => {
       <EntityLayout.Route path="/" title="Overview">
         <Grid container spacing={3} alignItems="stretch">
           {entityWarningContent}
+          <Grid item md={12}>
+           <IfCrossplaneOverviewAvailable>
+            <CrossplaneOverviewCard />
+           </IfCrossplaneOverviewAvailable>
+          </Grid>
+
+
           <Grid item md={6}>
             <EntityAboutCard variant="gridItem" />
           </Grid>
-          <IfCrossplaneOverviewAvailable>
-            <Grid item md={6}>
-              <CrossplaneOverviewCard />
-            </Grid>
-          </IfCrossplaneOverviewAvailable>
-          <Grid item md={4} xs={12}>
+          <Grid item md={4}>
             <EntityLinksCard />
           </Grid>
         </Grid>

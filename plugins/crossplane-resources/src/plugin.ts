@@ -12,33 +12,6 @@ export const crossplaneResourcesPlugin = createPlugin({
   },
 });
 
-export const CrossplaneCompositeResourcesTable = crossplaneResourcesPlugin.provide(
-  createComponentExtension({
-    name: 'CrossplaneCompositeResourcesTable',
-    component: {
-      lazy: () => import('./components/CrossplaneCompositeResourcesTable').then(m => m.default),
-    },
-  }),
-);
-
-export const CrossplaneManagedResources = crossplaneResourcesPlugin.provide(
-  createComponentExtension({
-    name: 'CrossplaneManagedResources',
-    component: {
-      lazy: () => import('./components/CrossplaneManagedResources').then(m => m.default),
-    },
-  }),
-);
-
-export const CrossplaneClaimResourcesTable = crossplaneResourcesPlugin.provide(
-  createComponentExtension({
-    name: 'CrossplaneClaimResourcesTable',
-    component: {
-      lazy: () => import('./components/CrossplaneClaimResourcesTable').then(m => m.default),
-    },
-  }),
-);
-
 export const CrossplaneAllResourcesTable = crossplaneResourcesPlugin.provide(
   createComponentExtension({
     name: 'CrossplaneAllResourcesTable',
