@@ -188,6 +188,7 @@ const useStyles = makeStyles((theme) => ({
         minWidth: '50px',
         display: 'inline-flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: '4px',
     },
     claimType: {
@@ -734,13 +735,6 @@ const CrossplaneAllResourcesTable = () => {
         }
     };
 
-    const getTreePrefix = (level: number, isLastChild?: boolean) => {
-        if (level === 0) return '';
-
-        // Just return the tree branch symbol without spacing
-        return isLastChild ? '└' : '├';
-    };
-
     const getEventTypeChip = (type?: string) => {
         switch (type) {
             case 'Warning':
@@ -797,12 +791,6 @@ const CrossplaneAllResourcesTable = () => {
                 >
                     <TableCell className={classes.tableCell}>
                         <span className={`${classes.typeBadge} ${getTypeBadgeClass(row.type)}`}>
-                            <span style={{ width: row.level * 4, display: 'inline-block' }}></span>
-                            {row.level > 0 && (
-                                <span className={classes.treePrefix}>
-                                    {getTreePrefix(row.level, row.isLastChild)}
-                                </span>
-                            )}
                             {row.type}
                         </span>
                     </TableCell>

@@ -4,7 +4,6 @@ import {
     Drawer,
     IconButton,
     Box,
-    Button,
     Table,
     TableBody,
     TableCell,
@@ -186,6 +185,34 @@ const CustomNode = ({ data }: { data: any }) => {
         return text.substring(0, maxLength - 3) + '...';
     };
 
+    // Define badge colors based on category
+    const getBadgeStyles = (categoryBadge: string) => {
+        switch (categoryBadge) {
+            case 'Claim':
+                return {
+                    backgroundColor: '#e3f2fd',
+                    color: '#1976d2'
+                };
+            case 'XR':
+                return {
+                    backgroundColor: '#f3e5f5',
+                    color: '#7b1fa2'
+                };
+            case 'MR':
+                return {
+                    backgroundColor: '#e8f5e9',
+                    color: '#388e3c'
+                };
+            default:
+                return {
+                    backgroundColor: theme.palette.primary.main,
+                    color: 'white'
+                };
+        }
+    };
+
+    const badgeStyles = getBadgeStyles(data.categoryBadge);
+
     return (
         <div
             style={{
@@ -237,8 +264,8 @@ const CustomNode = ({ data }: { data: any }) => {
                 </span>
                 {data.categoryBadge && (
                     <span style={{
-                        backgroundColor: theme.palette.primary.main,
-                        color: 'white',
+                        backgroundColor: badgeStyles.backgroundColor,
+                        color: badgeStyles.color,
                         padding: '2px 6px',
                         borderRadius: '3px',
                         fontSize: '10px',
