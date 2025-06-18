@@ -1,5 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, Box, Grid, Tooltip, makeStyles } from '@material-ui/core';
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Tooltip,
+  makeStyles,
+} from '@material-ui/core';
 import { useApi } from '@backstage/core-plugin-api';
 import { KubernetesObject } from '@backstage/plugin-kubernetes';
 import { kubernetesApiRef } from '@backstage/plugin-kubernetes-react';
@@ -7,13 +21,18 @@ import { useEntity } from '@backstage/plugin-catalog-react';
 import { usePermission } from '@backstage/plugin-permission-react';
 import { showOverview } from '@terasky/backstage-plugin-crossplane-common';
 import { configApiRef } from '@backstage/core-plugin-api';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import CancelIcon from '@material-ui/icons/Cancel';
-import { green, red } from '@material-ui/core/colors';
+import { useNavigate } from 'react-router-dom';
 
 interface ExtendedKubernetesObject extends KubernetesObject {
+    apiVersion?: string;
     status?: {
-        conditions?: Array<{ type: string, status: string, reason?: string, lastTransitionTime?: string, message?: string }>;
+        conditions?: Array<{
+            type: string,
+            status: string,
+            reason?: string,
+            lastTransitionTime?: string,
+            message?: string
+        }>;
     };
     spec?: {
         resourceRef?: {
@@ -24,31 +43,89 @@ interface ExtendedKubernetesObject extends KubernetesObject {
         resourceRefs?: Array<any>;
     };
 }
+
 const useStyles = makeStyles((theme) => ({
-    button: {
-      margin: theme.spacing(1),
+    table: {
+        minWidth: 650,
     },
-    customWidth: {
-      maxWidth: 500,
+    tableContainer: {
+        backgroundColor: '#ffffff',
+        border: `1px solid ${theme.palette.grey[400]}`,
+        borderRadius: '4px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
     },
-    noMaxWidth: {
-      maxWidth: 'none',
+    tableCell: {
+        padding: theme.spacing(1, 2),
+        borderBottom: `1px solid ${theme.palette.grey[300]}`,
     },
-  }));
+    headerCell: {
+        fontWeight: 'bold',
+        backgroundColor: '#ffffff',
+        borderBottom: `1px solid ${theme.palette.grey[400]}`,
+    },
+    clickableRow: {
+        cursor: 'pointer',
+        '&:hover': {
+            backgroundColor: theme.palette.action.hover,
+        },
+    },
+    statusBadge: {
+        padding: '2px 8px',
+        borderRadius: '3px',
+        fontSize: '10px',
+        fontWeight: 'bold',
+        display: 'inline-block',
+        marginRight: '8px',
+    },
+    syncedSuccess: {
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        color: '#2e7d32',
+    },
+    syncedError: {
+        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+        color: '#c62828',
+    },
+    readySuccess: {
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        color: '#2e7d32',
+    },
+    readyError: {
+        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+        color: '#c62828',
+    },
+    tooltip: {
+        backgroundColor: '#000000',
+        color: '#ffffff',
+        fontSize: '12px',
+        padding: theme.spacing(1.5),
+        maxWidth: 400,
+        '& .MuiTooltip-arrow': {
+            color: '#000000',
+        },
+    },
+    tooltipContent: {
+        maxWidth: 400,
+        '& strong': {
+            color: '#ffffff',
+        },
+    },
+}));
 
 const CrossplaneOverviewCard = () => {
     const { entity } = useEntity();
     const kubernetesApi = useApi(kubernetesApiRef);
     const config = useApi(configApiRef);
+    const navigate = useNavigate();
     const enablePermissions = config.getOptionalBoolean('crossplane.enablePermissions') ?? false;
     const { allowed: canShowOverviewTemp } = usePermission({ permission: showOverview });
     const canShowOverview = enablePermissions ? canShowOverviewTemp : true;
     const [claim, setClaim] = useState<ExtendedKubernetesObject | null>(null);
-    const [managedResourcesCount, setManagedResourcesCount] = useState<number>(0);
+    const [loading, setLoading] = useState<boolean>(true);
     const classes = useStyles();
 
     useEffect(() => {
         if (!canShowOverview) {
+            setLoading(false);
             return;
         }
 
@@ -61,11 +138,9 @@ const CrossplaneOverviewCard = () => {
             const labelSelector = annotations['backstage.io/kubernetes-label-selector'];
             const namespace = labelSelector.split(',').find(s => s.startsWith('crossplane.io/claim-namespace'))?.split('=')[1];
             const clusterOfClaim = annotations['backstage.io/managed-by-location'].split(": ")[1];
-            const xrGroup = annotations['terasky.backstage.io/composite-group'];
-            const xrVersion = annotations['terasky.backstage.io/composite-version'];
-            const xrPlural = annotations['terasky.backstage.io/composite-plural'];
-            const xrName = annotations['terasky.backstage.io/composite-name'];
+
             if (!plural || !group || !version || !namespace || !clusterOfClaim) {
+                setLoading(false);
                 return;
             }
 
@@ -80,22 +155,10 @@ const CrossplaneOverviewCard = () => {
                 });
                 const claimResource: ExtendedKubernetesObject = await response.json();
                 setClaim(claimResource);
-
-                const compositeResourceUrl = claimResource.spec?.resourceRef?.apiVersion && claimResource.spec?.resourceRef?.kind && claimResource.spec?.resourceRef?.name
-                    ? `/apis/${xrGroup}/${xrVersion}/${xrPlural}/${xrName}`
-                    : null;
-
-                if (compositeResourceUrl) {
-                    const compositeResponse = await kubernetesApi.proxy({
-                        clusterName: clusterOfClaim,
-                        path: compositeResourceUrl,
-                        init: { method: 'GET' },
-                    });
-                    const compositeResourceData = await compositeResponse.json();
-                    setManagedResourcesCount(compositeResourceData.spec?.resourceRefs?.length || 0);
-                }
             } catch (error) {
-                throw error;
+                console.error('Error fetching claim:', error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -104,95 +167,177 @@ const CrossplaneOverviewCard = () => {
 
     if (!canShowOverview) {
         return (
-          <Card style={{ width: '450px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-          <CardContent>
-            <Typography variant="h5" component="h1" align="center">
-              Crossplane Overview
-            </Typography>
-          <Box m={2}>
-            <Typography  gutterBottom>
-              You don't have permissions to view claim resources
-            </Typography>
-          </Box>
-          </CardContent>
-          </Card>
+            <Card>
+                <CardContent>
+                    <Typography variant="h5" component="h1">
+                        Claim (XRC)
+                    </Typography>
+                    <Box m={2}>
+                        <Typography gutterBottom>
+                            You don't have permissions to view claim resources
+                        </Typography>
+                    </Box>
+                </CardContent>
+            </Card>
         );
-      }
-    const renderStatusIcon = (status: string) => {
-        return status === 'True' ? <CheckCircleIcon style={{ color: green[500] }} /> : <CancelIcon style={{ color: red[500] }} />;
+    }
+
+    const getConditionStatus = (conditionType: string): { status: string; condition: any } => {
+        const condition = claim?.status?.conditions?.find(c => c.type === conditionType);
+        return {
+            status: condition?.status || 'Unknown',
+            condition: condition || {}
+        };
     };
 
-    const renderConditionTooltip = (condition: any) => (
-        <Card style={{ width: '400px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-            <CardContent>
-                <Typography variant="subtitle1">Condition: {condition.type}</Typography>
-                <Typography variant="body2">Status: {condition.status}</Typography>
-                <Typography variant="body2">Reason: {condition.reason}</Typography>
-                <Typography variant="body2">Last Transition Time: {condition.lastTransitionTime}</Typography>
-                <Typography variant="body2" style={{ wordWrap: 'break-word', maxWidth: '380px', alignSelf: 'center', }}>Message: {condition.message}</Typography>
-            </CardContent>
-        </Card>
-    );
+    const renderStatusBadge = (conditionType: string) => {
+        const { status, condition } = getConditionStatus(conditionType);
+        const isSuccess = status === 'True';
+
+        const badgeClass = conditionType === 'Synced'
+            ? (isSuccess ? classes.syncedSuccess : classes.syncedError)
+            : (isSuccess ? classes.readySuccess : classes.readyError);
+
+        return (
+            <Tooltip
+                classes={{
+                    tooltip: classes.tooltip,
+                }}
+                title={
+                    <Box className={classes.tooltipContent}>
+                        <Typography variant="subtitle2" gutterBottom>
+                            <strong>Condition: {condition.type}</strong>
+                        </Typography>
+                        <Typography variant="body2">Status: {condition.status}</Typography>
+                        {condition.reason && (
+                            <Typography variant="body2">Reason: {condition.reason}</Typography>
+                        )}
+                        {condition.lastTransitionTime && (
+                            <Typography variant="body2">
+                                Last Transition: {new Date(condition.lastTransitionTime).toLocaleString()}
+                            </Typography>
+                        )}
+                        {condition.message && (
+                            <Typography variant="body2" style={{ wordWrap: 'break-word' }}>
+                                Message: {condition.message}
+                            </Typography>
+                        )}
+                    </Box>
+                }
+                arrow
+            >
+                <span className={`${classes.statusBadge} ${badgeClass}`}>
+                    {conditionType}
+                </span>
+            </Tooltip>
+        );
+    };
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return 'Unknown';
+        const date = new Date(dateString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    };
+
+    const getRelativeTime = (dateString?: string) => {
+        if (!dateString) return 'Unknown';
+
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+        if (diffInSeconds < 60) {
+            return `${diffInSeconds} second${diffInSeconds !== 1 ? 's' : ''} ago`;
+        }
+
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) {
+            return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+        }
+
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) {
+            return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+        }
+
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 30) {
+            return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+        }
+
+        const diffInMonths = Math.floor(diffInDays / 30);
+        if (diffInMonths < 12) {
+            return `${diffInMonths} month${diffInMonths !== 1 ? 's' : ''} ago`;
+        }
+
+        const diffInYears = Math.floor(diffInMonths / 12);
+        return `${diffInYears} year${diffInYears !== 1 ? 's' : ''} ago`;
+    };
 
     return (
         <Card>
             <CardContent>
-                <Typography variant="h6" gutterBottom>Crossplane Overview</Typography>
-                {claim ? (
-                    <Box>
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle1" style={{ fontWeight: 'bold', color: 'gray' }}>Kind</Typography>
-                                <Typography variant="body2">{claim.kind}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle1" style={{ fontWeight: 'bold', color: 'gray', width: '350px' }}>Synced</Typography>
-                                <Tooltip
-                                    //placement="left-start"
-                                    classes={{ tooltip: classes.customWidth }}
-                                    title={renderConditionTooltip(claim.status?.conditions?.find((condition: any) => condition.type === 'Synced') || {})}
-                                >
-                                    <Typography variant="body2">
-                                        {renderStatusIcon(claim.status?.conditions?.find((condition: any) => condition.type === 'Synced')?.status || 'Unknown')}
-                                    </Typography>
-                                </Tooltip>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle1" style={{ fontWeight: 'bold', color: 'gray' }}>Name</Typography>
-                                <Typography variant="body2">{claim.metadata?.name}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle1" style={{ fontWeight: 'bold', color: 'gray' }}>Ready</Typography>
-                                <Tooltip
-                                    //placement="left-start"
-                                    classes={{ tooltip: classes.customWidth }}
-                                    title={renderConditionTooltip(claim.status?.conditions?.find((condition: any) => condition.type === 'Ready') || {})}
-                                >
-                                    <Typography variant="body2">
-                                        {renderStatusIcon(claim.status?.conditions?.find((condition: any) => condition.type === 'Ready')?.status || 'Unknown')}
-                                    </Typography>
-                                </Tooltip>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle1" style={{ fontWeight: 'bold', color: 'gray' }}>Namespace</Typography>
-                                <Typography variant="body2">{claim.metadata?.namespace}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle1" style={{ fontWeight: 'bold', color: 'gray' }}>Managed Resources</Typography>
-                                <Typography variant="body2">{managedResourcesCount}</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle1" style={{ fontWeight: 'bold', color: 'gray' }}>Cluster</Typography>
-                                <Typography variant="body2">{entity.metadata?.annotations?.['backstage.io/managed-by-location'].split(": ")[1] || "Unknown" }</Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <Typography variant="subtitle1" style={{ fontWeight: 'bold', color: 'gray' }}>Composition</Typography>
-                                <Typography variant="body2">{entity.metadata?.annotations?.['terasky.backstage.io/composition-name'] || "Unknown" }</Typography>
-                            </Grid>
-                        </Grid>
-                    </Box>
-                ) : (
+                <Typography variant="h6" gutterBottom>
+                    Claim (XRC)
+                </Typography>
+
+                {loading ? (
                     <Typography>Loading...</Typography>
+                ) : claim ? (
+                    <TableContainer component={Paper} className={classes.tableContainer}>
+                        <Table className={classes.table} size="small">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell className={`${classes.tableCell} ${classes.headerCell}`}>Name</TableCell>
+                                    <TableCell className={`${classes.tableCell} ${classes.headerCell}`}>Namespace</TableCell>
+                                    <TableCell className={`${classes.tableCell} ${classes.headerCell}`}>Group</TableCell>
+                                    <TableCell className={`${classes.tableCell} ${classes.headerCell}`}>Kind</TableCell>
+                                    <TableCell className={`${classes.tableCell} ${classes.headerCell}`}>Status</TableCell>
+                                    <TableCell className={`${classes.tableCell} ${classes.headerCell}`}>Created</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                <TableRow
+                                    className={classes.clickableRow}
+                                    onClick={() => navigate(`/catalog/${entity.metadata.namespace}/component/${entity.metadata.name}/crossplane-resources`)}
+                                >
+                                    <TableCell className={classes.tableCell}>
+                                        {claim.metadata?.name || 'Unknown'}
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        {claim.metadata?.namespace || 'Unknown'}
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        {claim.apiVersion?.split('/')[0] || 'Unknown'}
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        {claim.kind || 'Unknown'}
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <Box display="flex">
+                                            {renderStatusBadge('Synced')}
+                                            {renderStatusBadge('Ready')}
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <Tooltip
+                                            classes={{
+                                                tooltip: classes.tooltip,
+                                            }}
+                                            title={formatDate(claim.metadata?.creationTimestamp)}
+                                            arrow
+                                        >
+                                            <span style={{ cursor: 'help' }}>
+                                                {getRelativeTime(claim.metadata?.creationTimestamp)}
+                                            </span>
+                                        </Tooltip>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                ) : (
+                    <Typography>No claim data available</Typography>
                 )}
             </CardContent>
         </Card>
