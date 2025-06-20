@@ -50,10 +50,10 @@ catalog:
   useUrlReadersSearch: true
 crossplane:
   enablePermissions: false
-# integrations:
-#   github:
-#   - host: github.com
-#     token: ${GITHUB_TOKEN}
+integrations:
+  github:
+  - host: github.com
+    token: ${GITHUB_TOKEN}
 kubernetes:
   auth:
     providers:
@@ -61,22 +61,18 @@ kubernetes:
   clusterLocatorMethods:
   - clusters:
     - authMetadata:
-        upbound.io/organization: <org>
-        upbound.io/token: <token>
+        upbound.io/organization: ${UP_ORG}
+        upbound.io/token: ${UP_ROBOT_TOKEN}
       authProvider: upbound
       name: solution-idp-non-prod-frontend-frontend
       skipMetricsLookup: true
       skipTLSVerify: true
-      url: <cluster>
+      url: ${UP_CTP_URL}
     type: config
   frontend:
     podDelete:
       enabled: true
-  objectTypes:
-  - configmaps
-  - deployments
-  - pods
-  - services
+  objectTypes: []
   serviceLocatorMethod:
     type: multiTenant
   skipMetricsLookup: true
@@ -95,9 +91,6 @@ kubernetesIngestor:
       group: aws.platform.upbound.io
       plural: xpodidentities
       singular: xpodidentity
-    - apiVersion: v1
-      group: pkg.crossplane.io
-      plural: providers
     - apiVersion: v1alpha1
       group: platform.upbound.io
       plural: xsqlinstances
