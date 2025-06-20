@@ -26,12 +26,9 @@ backend.add(import('@backstage/plugin-kubernetes-backend'));
 
 // upbound
 backend.add(import('@internal/plugin-kubernetes-backend-module-upbound'));
-
-// terasky
-backend.add(import('@terasky/backstage-plugin-crossplane-permissions-backend'));
+backend.add(import('@internal/plugin-crossplane-permissions-backend'));
 backend.add(import('@internal/plugin-kubernetes-ingestor'));
-// backend.add(import('@terasky/backstage-plugin-kubernetes-ingestor'));
-backend.add(import('@terasky/backstage-plugin-scaffolder-backend-module-terasky-utils'));
+backend.add(import('@internal/plugin-backstage-plugin-scaffolder-backend-module-crossplane-utils'));
 
 // catalog plugin
 backend.add(import('@backstage/plugin-catalog-backend'));

@@ -270,8 +270,6 @@ const CrossplaneEntityPage = () => {
             <CrossplaneOverviewCard />
            </IfCrossplaneOverviewAvailable>
           </Grid>
-
-
           <Grid item md={6}>
             <EntityAboutCard variant="gridItem" />
           </Grid>

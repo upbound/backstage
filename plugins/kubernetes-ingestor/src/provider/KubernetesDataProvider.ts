@@ -41,7 +41,7 @@ export class KubernetesDataProvider {
   private getAnnotationPrefix(): string {
     return (
       this.config.getOptionalString('kubernetesIngestor.annotationPrefix') ||
-      'terasky.backstage.io'
+      'upbound.backstage.io'
     );
   }
 
