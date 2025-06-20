@@ -586,34 +586,94 @@ import {
 
       const convertDefaultValuesToPlaceholders = this.config.getOptionalBoolean('kubernetesIngestor.crossplane.xrds.convertDefaultValuesToPlaceholders');
 
-      const processProperties = (properties: Record<string, any>): Record<string, any> => {
+      const processProperties = (
+        properties: Record<string, any>,
+        parentRequired: string[] = []
+      ): Record<string, any> => {
         const processedProperties: Record<string, any> = {};
 
         for (const [key, value] of Object.entries(properties)) {
           const typedValue = value as Record<string, any>;
-          if (typedValue.type === 'object' && typedValue.properties) {
-            const subProperties = processProperties(typedValue.properties);
-            processedProperties[key] = { ...typedValue, properties: subProperties };
 
-            if (typedValue.properties.enabled && typedValue.properties.enabled.type === 'boolean') {
-              const siblingKeys = Object.keys(typedValue.properties).filter(k => k !== 'enabled');
-              processedProperties[key].dependencies = {
-                enabled: {
-                  if: {
-                    properties: {
-                      enabled: { const: true },
+          if (typedValue.type === 'object' && typedValue.properties) {
+            const isRequired = parentRequired.includes(key);
+            const childRequired = typedValue.required || [];
+
+            // For optional objects with required children
+            if (!isRequired && childRequired.length > 0) {
+              // Process child properties with modifications
+              const modifiedProperties: Record<string, any> = {};
+
+              // First, process all properties normally
+              Object.entries(typedValue.properties).forEach(([propKey, propValue]: [string, any]) => {
+                const processedProp = processProperties({ [propKey]: propValue }, [])[propKey];
+
+                // For fields that were originally required, remove the required constraint
+                // and add a note in the description
+                if (childRequired.includes(propKey)) {
+                  modifiedProperties[propKey] = {
+                    ...processedProp,
+                    description: propValue.description
+                      ? `${propValue.description} (Required when using ${typedValue.title || key})`
+                      : `Required when using ${typedValue.title || key}`
+                  };
+                } else {
+                  modifiedProperties[propKey] = processedProp;
+                }
+              });
+
+              // Create the object without any required fields
+              processedProperties[key] = {
+                ...typedValue,
+                properties: modifiedProperties,
+                required: [] // Empty required array
+              };
+
+              // Ensure no required field exists
+              delete processedProperties[key].required;
+
+            } else {
+              // Process child properties normally
+              const subProperties = processProperties(
+                typedValue.properties,
+                childRequired
+              );
+
+              // Normal processing - keep everything as is
+              processedProperties[key] = {
+                ...typedValue,
+                properties: subProperties
+              };
+
+              // Handle existing enabled pattern
+              if (typedValue.properties.enabled && typedValue.properties.enabled.type === 'boolean') {
+                const siblingKeys = Object.keys(typedValue.properties).filter(k => k !== 'enabled');
+                processedProperties[key].dependencies = {
+                  enabled: {
+                    if: {
+                      properties: {
+                        enabled: { const: true },
+                      },
+                    },
+                    then: {
+                      properties: siblingKeys.reduce((acc, k) => ({
+                        ...acc,
+                        [k]: subProperties[k]
+                      }), {}),
                     },
                   },
-                  then: {
-                    properties: siblingKeys.reduce((acc, k) => ({ ...acc, [k]: typedValue.properties[k] }), {}),
-                  },
-                },
-              };
-              siblingKeys.forEach(k => delete processedProperties[key].properties[k]);
+                };
+                // Only keep enabled in properties
+                processedProperties[key].properties = { enabled: typedValue.properties.enabled };
+              }
             }
           } else {
+            // Handle non-object properties
             if (convertDefaultValuesToPlaceholders && typedValue.default !== undefined && typedValue.type !== 'boolean') {
-              processedProperties[key] = { ...typedValue, 'ui:placeholder': typedValue.default };
+              processedProperties[key] = {
+                ...typedValue,
+                'ui:placeholder': typedValue.default
+              };
               delete processedProperties[key].default;
             } else {
               processedProperties[key] = typedValue;
@@ -626,7 +686,10 @@ import {
 
       // Extract additional parameters as a separate titled object
       const processedSpec = version.schema?.openAPIV3Schema?.properties?.spec
-        ? processProperties(version.schema.openAPIV3Schema.properties.spec.properties)
+        ? processProperties(
+            version.schema.openAPIV3Schema.properties.spec.properties,
+            version.schema.openAPIV3Schema.properties.spec.required || []
+          )
         : {};
 
       const additionalParameters = {
