@@ -1,28 +1,21 @@
 # crossplane-common
 
-This plugin backend was templated using the Backstage CLI. You should replace this text with a description of your plugin backend.
+The `crossplane-common` package provides shared functionalities and permission definitions for the Crossplane plugins in Backstage. This package is used by both the frontend and backend Crossplane plugins to ensure consistent permission management and access control.
 
-## Installation
+## Permissions
 
-This plugin is installed via the `@internal/plugin-crossplane-common-backend` package. To install it to your backend package, run the following command:
+The `crossplane-common` package defines the following permissions for managing Crossplane resources:
 
-```bash
-# From your root directory
-yarn --cwd packages/backend add @internal/plugin-crossplane-common-backend
-```
-
-Then add the plugin to your backend in `packages/backend/src/index.ts`:
-
-```ts
-const backend = createBackend();
-// ...
-backend.add(import('@internal/plugin-crossplane-common-backend'));
-```
-
-## Development
-
-This plugin backend can be started in a standalone mode from directly in this
-package with `yarn start`. It is a limited setup that is most convenient when
-developing the plugin backend itself.
-
-If you want to run the entire project, including the frontend, run `yarn start` from the root directory.
+- **List Crossplane Claims**: `crossplane.claims.list`
+- **View YAML of Crossplane Claims**: `crossplane.claims.view-yaml`
+- **View Events of Crossplane Claims**: `crossplane.claims.show-events`
+- **List Crossplane Composite Resources**: `crossplane.composite-resources.list`
+- **View YAML of Crossplane Composite Resources**: `crossplane.composite-resources.view-yaml`
+- **View Events of Crossplane Composite Resources**: `crossplane.composite-resources.show-events`
+- **List Crossplane Managed Resources**: `crossplane.managed-resources.list`
+- **View YAML of Crossplane Managed Resources**: `crossplane.managed-resources.view-yaml`
+- **View Events of Crossplane Managed Resources**: `crossplane.managed-resources.show-events`
+- **List Crossplane Additional Resources (XRD, Composition, Function)**: `crossplane.additional-resources.list`
+- **View YAML of Crossplane Additional Resources (XRD, Composition, Function)**: `crossplane.additional-resources.view-yaml`
+- **View Events of Crossplane Additional Resources (XRD, Composition, Function)**: `crossplane.additional-resources.show-events`
+- **View Resource Graph of Crossplane Resources**: `crossplane.resource-graph.show`

@@ -1,28 +1,5 @@
 # crossplane-permissions
 
-This plugin backend was templated using the Backstage CLI. You should replace this text with a description of your plugin backend.
+The `crossplane-permissions` backend plugin for Backstage provides integration with Crossplane, enabling permission management and access control for Crossplane resources. This plugin leverages Backstage's permission framework to enforce policies and manage access to Crossplane resources.
 
-## Installation
-
-This plugin is installed via the `@internal/plugin-crossplane-permissions-backend` package. To install it to your backend package, run the following command:
-
-```bash
-# From your root directory
-yarn --cwd packages/backend add @internal/plugin-crossplane-permissions-backend
-```
-
-Then add the plugin to your backend in `packages/backend/src/index.ts`:
-
-```ts
-const backend = createBackend();
-// ...
-backend.add(import('@internal/plugin-crossplane-permissions-backend'));
-```
-
-## Development
-
-This plugin backend can be started in a standalone mode from directly in this
-package with `yarn start`. It is a limited setup that is most convenient when
-developing the plugin backend itself.
-
-If you want to run the entire project, including the frontend, run `yarn start` from the root directory.
+Once installed and configured, the crossplane-permissions plugin will provide endpoints for managing permissions and access control for Crossplane resources. You can access these endpoints via the configured routes in your Backstage backend.
