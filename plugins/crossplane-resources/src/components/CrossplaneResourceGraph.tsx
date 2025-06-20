@@ -33,7 +33,7 @@ import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import ReactFlow, { ReactFlowProvider, MiniMap, Controls, Background, Node, Edge, Handle, Position } from 'react-flow-renderer';
 import dagre from 'dagre';
 import { usePermission } from '@backstage/plugin-permission-react';
-import { showResourceGraph } from '@terasky/backstage-plugin-crossplane-common';
+import { showResourceGraph } from '@internal/plugin-crossplane-common-backend';
 
 const useStyles = makeStyles((theme) => ({
     drawer: {

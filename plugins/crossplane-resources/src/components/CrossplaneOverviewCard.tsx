@@ -19,7 +19,7 @@ import { KubernetesObject } from '@backstage/plugin-kubernetes';
 import { kubernetesApiRef } from '@backstage/plugin-kubernetes-react';
 import { useEntity } from '@backstage/plugin-catalog-react';
 import { usePermission } from '@backstage/plugin-permission-react';
-import { showOverview } from '@terasky/backstage-plugin-crossplane-common';
+import { showOverview } from '@internal/plugin-crossplane-common-backend';
 import { configApiRef } from '@backstage/core-plugin-api';
 import { useNavigate } from 'react-router-dom';
 

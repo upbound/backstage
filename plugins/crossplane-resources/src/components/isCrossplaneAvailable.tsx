@@ -1,7 +1,7 @@
 import { Entity } from '@backstage/catalog-model';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import { usePermission } from '@backstage/plugin-permission-react';
-import { showOverview, showResourceGraph, listClaimsPermission } from '@terasky/backstage-plugin-crossplane-common';
+import { showOverview, showResourceGraph, listClaimsPermission } from '@internal/plugin-crossplane-common-backend';
 
 export const isCrossplaneAvailable = (entity: Entity): boolean => {
   return Boolean(entity.metadata.annotations?.['terasky.backstage.io/crossplane-resource']);

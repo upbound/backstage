@@ -29,7 +29,7 @@ import {
   listClaimsPermission,
   listCompositeResourcesPermission,
   listManagedResourcesPermission
-} from '@terasky/backstage-plugin-crossplane-common';
+} from '@internal/plugin-crossplane-common-backend';
 import { configApiRef } from '@backstage/core-plugin-api';
 import { useNavigate } from 'react-router-dom';
 import pluralize from 'pluralize';

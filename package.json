@@ -34,6 +34,7 @@
     "@playwright/test": "^1.32.3",
     "@types/dagre": "^0.7.52",
     "@types/file-saver": "^2.0.7",
+    "@types/fs-extra": "^11.0.4",
     "@types/react-copy-to-clipboard": "^5.0.7",
     "@types/react-syntax-highlighter": "^15.5.13",
     "node-gyp": "^10.0.0",
