@@ -48,7 +48,7 @@ import {
     }
 
     private getAnnotationPrefix(): string {
-      return this.config.getOptionalString('kubernetesIngestor.annotationPrefix') || 'terasky.backstage.io';
+      return this.config.getOptionalString('kubernetesIngestor.annotationPrefix') || 'upbound.backstage.io';
     }
 
     constructor(
@@ -930,7 +930,7 @@ import {
       const baseStepsYaml = `
       - id: generateManifest
         name: Generate Kubernetes Resource Manifest
-        action: terasky:claim-template
+        action: upbound:claim-template
         input:
           parameters: \${{ parameters }}
           nameParam: xrName
@@ -1662,7 +1662,7 @@ import {
       const baseStepsYaml = `
       - id: generateManifest
         name: Generate Kubernetes Resource Manifest
-        action: terasky:crd-template
+        action: upbound:crd-template
         input:
           parameters: \${{ parameters }}
           nameParam: name
@@ -1994,10 +1994,10 @@ import {
             ...Object.fromEntries(
               Object.entries(annotations).filter(([key]) => key !== 'backstage.io/links')
             ),
-            'terasky.backstage.io/kubernetes-resource-kind': resource.kind,
-            'terasky.backstage.io/kubernetes-resource-name': resource.metadata.name,
-            'terasky.backstage.io/kubernetes-resource-api-version': resource.apiVersion,
-            'terasky.backstage.io/kubernetes-resource-namespace': resource.metadata.namespace || '',
+            'upbound.backstage.io/kubernetes-resource-kind': resource.kind,
+            'upbound.backstage.io/kubernetes-resource-name': resource.metadata.name,
+            'upbound.backstage.io/kubernetes-resource-api-version': resource.apiVersion,
+            'upbound.backstage.io/kubernetes-resource-namespace': resource.metadata.namespace || '',
             ...customAnnotations,
             ...(systemModel === 'cluster-namespace' || namespaceModel === 'cluster' || nameModel === 'name-cluster' ? {
               'backstage.io/kubernetes-cluster': resource.clusterName,
@@ -2188,7 +2188,7 @@ import {
     }
 
     private getAnnotationPrefix(): string {
-      return this.config.getOptionalString('kubernetesIngestor.annotationPrefix') || 'terasky.backstage.io';
+      return this.config.getOptionalString('kubernetesIngestor.annotationPrefix') || 'upbound.backstage.io';
     }
 
     // Helper function to parse and transform backstage.io/links annotation from original claim

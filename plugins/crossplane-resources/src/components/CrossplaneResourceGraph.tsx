@@ -500,7 +500,7 @@ const CrossplaneResourceGraph = () => {
         let claimNodeId: string | undefined;
 
         // Find the claim node first (it should be the entity's claim)
-        const claimName = entity.metadata.annotations?.['terasky.backstage.io/claim-name'];
+        const claimName = entity.metadata.annotations?.['upbound.backstage.io/claim-name'];
         const claimResource = resourceList.find(r => r.metadata?.name === claimName);
 
         // Helper function to determine category badge
@@ -702,11 +702,11 @@ const CrossplaneResourceGraph = () => {
 
         const fetchResources = async () => {
             const annotations = entity.metadata.annotations || {};
-            const claimName = annotations['terasky.backstage.io/claim-name'];
+            const claimName = annotations['upbound.backstage.io/claim-name'];
             const clusterOfClaim = annotations['backstage.io/managed-by-location'].split(": ")[1];
-            const plural = annotations['terasky.backstage.io/claim-plural'];
-            const group = annotations['terasky.backstage.io/claim-group'];
-            const version = annotations['terasky.backstage.io/claim-version'];
+            const plural = annotations['upbound.backstage.io/claim-plural'];
+            const group = annotations['upbound.backstage.io/claim-group'];
+            const version = annotations['upbound.backstage.io/claim-version'];
             const labelSelector = annotations['backstage.io/kubernetes-label-selector'];
             const namespace = labelSelector.split(',').find(s => s.startsWith('crossplane.io/claim-namespace'))?.split('=')[1];
             const crdMap: Map<string, any> = new Map();

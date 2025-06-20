@@ -30,11 +30,6 @@ backend.add(import('@internal/plugin-crossplane-permissions-backend'));
 backend.add(import('@internal/plugin-kubernetes-ingestor'));
 backend.add(import('@internal/plugin-backstage-plugin-scaffolder-backend-module-crossplane-utils'));
 
-// terasky
-// backend.add(import('@terasky/backstage-plugin-crossplane-permissions-backend'));
-// backend.add(import('@terasky/backstage-plugin-kubernetes-ingestor'));
-// backend.add(import('@terasky/backstage-plugin-scaffolder-backend-module-terasky-utils'));
-
 // catalog plugin
 backend.add(import('@backstage/plugin-catalog-backend'));
 backend.add(import('@backstage/plugin-catalog-backend-module-scaffolder-entity-model'));

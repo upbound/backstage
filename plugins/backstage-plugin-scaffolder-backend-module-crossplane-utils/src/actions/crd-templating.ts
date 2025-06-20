@@ -16,7 +16,7 @@ export function createCrdTemplateAction({config}: {config: any}) {
     removeEmptyParams?: boolean;
     clusters: string[];
   }>({
-    id: 'terasky:crd-template',
+    id: 'upbound:crd-template',
     description: 'Templates a CRD manifest based on input parameters',
     schema: {
       input: {
@@ -157,11 +157,11 @@ export function createCrdTemplateAction({config}: {config: any}) {
             namespace: ctx.input.parameters[ctx.input.namespaceParam],
           }),
           annotations: {
-            'terasky.backstage.io/source-info': JSON.stringify(sourceInfo),
-            'terasky.backstage.io/add-to-catalog': "true",
-            'terasky.backstage.io/owner': ctx.input.parameters[ctx.input.ownerParam],
-            'terasky.backstage.io/system': ctx.input.parameters[ctx.input.namespaceParam || 'namespace'],
-            ...(sourceFileUrl && { 'terasky.backstage.io/source-file-url': sourceFileUrl }),
+            'upbound.backstage.io/source-info': JSON.stringify(sourceInfo),
+            'upbound.backstage.io/add-to-catalog': "true",
+            'upbound.backstage.io/owner': ctx.input.parameters[ctx.input.ownerParam],
+            'upbound.backstage.io/system': ctx.input.parameters[ctx.input.namespaceParam || 'namespace'],
+            ...(sourceFileUrl && { 'upbound.backstage.io/source-file-url': sourceFileUrl }),
           },
         },
         spec: filteredParameters,

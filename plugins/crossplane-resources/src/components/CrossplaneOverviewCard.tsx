@@ -131,10 +131,10 @@ const CrossplaneOverviewCard = () => {
 
         const fetchResources = async () => {
             const annotations = entity.metadata.annotations || {};
-            const claimName = annotations['terasky.backstage.io/claim-name'];
-            const plural = annotations['terasky.backstage.io/claim-plural'];
-            const group = annotations['terasky.backstage.io/claim-group'];
-            const version = annotations['terasky.backstage.io/claim-version'];
+            const claimName = annotations['upbound.backstage.io/claim-name'];
+            const plural = annotations['upbound.backstage.io/claim-plural'];
+            const group = annotations['upbound.backstage.io/claim-group'];
+            const version = annotations['upbound.backstage.io/claim-version'];
             const labelSelector = annotations['backstage.io/kubernetes-label-selector'];
             const namespace = labelSelector.split(',').find(s => s.startsWith('crossplane.io/claim-namespace'))?.split('=')[1];
             const clusterOfClaim = annotations['backstage.io/managed-by-location'].split(": ")[1];

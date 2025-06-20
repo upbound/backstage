@@ -7,7 +7,7 @@ export function createCatalogInfoCleanerAction() {
     return createTemplateAction<{
         entity: Record<string, any>;
     }>({
-        id: 'terasky:catalog-info-cleaner',
+        id: 'upbound:catalog-info-cleaner',
         description: 'Templates a claim manifest based on input parameters',
         schema: {
             input: {

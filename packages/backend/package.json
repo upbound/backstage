@@ -45,7 +45,6 @@
     "@internal/plugin-crossplane-permissions-backend": "workspace:^",
     "@internal/plugin-kubernetes-backend-module-upbound": "workspace:^",
     "@internal/plugin-kubernetes-ingestor": "workspace:^",
-    "@terasky/backstage-plugin-scaffolder-backend-module-terasky-utils": "^1.4.2",
     "app": "link:../app",
     "better-sqlite3": "^9.0.0",
     "node-gyp": "^10.0.0",

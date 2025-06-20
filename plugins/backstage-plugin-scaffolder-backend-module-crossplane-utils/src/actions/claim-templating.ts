@@ -16,7 +16,7 @@ export function createCrossplaneClaimAction({config}: {config: any}) {
     removeEmptyParams?: boolean;
     ownerParam: string;
   }>({
-    id: 'terasky:claim-template',
+    id: 'upbound:claim-template',
     description: 'Templates a claim manifest based on input parameters',
     schema: {
       input: {
@@ -157,11 +157,11 @@ export function createCrossplaneClaimAction({config}: {config: any}) {
         kind: ctx.input.kind,
         metadata: {
           annotations: {
-            'terasky.backstage.io/source-info': JSON.stringify(sourceInfo),
-            'terasky.backstage.io/add-to-catalog': "true",
-            'terasky.backstage.io/owner': ctx.input.parameters[ctx.input.ownerParam],
-            'terasky.backstage.io/system': ctx.input.parameters[ctx.input.namespaceParam],
-            ...(sourceFileUrl && { 'terasky.backstage.io/source-file-url': sourceFileUrl }),
+            'upbound.backstage.io/source-info': JSON.stringify(sourceInfo),
+            'upbound.backstage.io/add-to-catalog': "true",
+            'upbound.backstage.io/owner': ctx.input.parameters[ctx.input.ownerParam],
+            'upbound.backstage.io/system': ctx.input.parameters[ctx.input.namespaceParam],
+            ...(sourceFileUrl && { 'upbound.backstage.io/source-file-url': sourceFileUrl }),
           },
           name: ctx.input.parameters[ctx.input.nameParam],
           namespace: ctx.input.parameters[ctx.input.namespaceParam],

@@ -4,7 +4,7 @@ import { usePermission } from '@backstage/plugin-permission-react';
 import { showOverview, showResourceGraph, listClaimsPermission } from '@internal/plugin-crossplane-common-backend';
 
 export const isCrossplaneAvailable = (entity: Entity): boolean => {
-  return Boolean(entity.metadata.annotations?.['terasky.backstage.io/crossplane-resource']);
+  return Boolean(entity.metadata.annotations?.['upbound.backstage.io/crossplane-resource']);
 };
 
 // Create wrapper components that handle the permission checks for content

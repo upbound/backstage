@@ -508,10 +508,10 @@ const CrossplaneAllResourcesTable = () => {
             try {
                 // Fetch Claim Resource
                 if (canListClaims) {
-                    const claimName = annotations['terasky.backstage.io/claim-name'];
-                    const plural = annotations['terasky.backstage.io/claim-plural'];
-                    const group = annotations['terasky.backstage.io/claim-group'];
-                    const version = annotations['terasky.backstage.io/claim-version'];
+                    const claimName = annotations['upbound.backstage.io/claim-name'];
+                    const plural = annotations['upbound.backstage.io/claim-plural'];
+                    const group = annotations['upbound.backstage.io/claim-group'];
+                    const version = annotations['upbound.backstage.io/claim-version'];
                     const labelSelector = annotations['backstage.io/kubernetes-label-selector'];
                     const namespace = labelSelector?.split(',').find(s => s.startsWith('crossplane.io/claim-namespace'))?.split('=')[1];
                     const clusterOfClaim = annotations['backstage.io/managed-by-location']?.split(": ")[1];
@@ -548,10 +548,10 @@ const CrossplaneAllResourcesTable = () => {
 
                 // Fetch Composite Resource
                 if (canListComposite) {
-                    const compositePlural = annotations['terasky.backstage.io/composite-plural'];
-                    const compositeGroup = annotations['terasky.backstage.io/composite-group'];
-                    const compositeVersion = annotations['terasky.backstage.io/composite-version'];
-                    const compositeName = annotations['terasky.backstage.io/composite-name'];
+                    const compositePlural = annotations['upbound.backstage.io/composite-plural'];
+                    const compositeGroup = annotations['upbound.backstage.io/composite-group'];
+                    const compositeVersion = annotations['upbound.backstage.io/composite-version'];
+                    const compositeName = annotations['upbound.backstage.io/composite-name'];
                     const clusterOfComposite = annotations['backstage.io/managed-by-location']?.split(": ")[1];
 
                     if (compositePlural && compositeGroup && compositeVersion && compositeName && clusterOfComposite) {
