@@ -134,62 +134,59 @@ export function createCrossplaneClaimAction({config}: {config: any}) {
         pushToGit: ctx.input.parameters.pushToGit,
         gitBranch: ctx.input.parameters.targetBranch || config.getOptionalString('kubernetesIngestor.crossplane.xrds.publishPhase.git.targetBranch'),
         gitRepo: ctx.input.parameters.repoUrl || config.getOptionalString('kubernetesIngestor.crossplane.xrds.publishPhase.git.repoUrl'),
-        gitLayout: ctx.input.parameters.manifestLayout,
-        basePath: ctx.input.parameters.manifestLayout === 'custom'
-          ? ctx.input.parameters.basePath
-          : ctx.input.parameters.manifestLayout === 'namespace-scoped'
-            ? `${ctx.input.parameters[ctx.input.namespaceParam]}`
-            : `${ctx.input.clusters[0]}/${ctx.input.parameters[ctx.input.namespaceParam]}/${ctx.input.kind}`
+        basePath: `${ctx.input.clusters[0]}/${ctx.input.parameters[ctx.input.namespaceParam]}/${ctx.input.kind}`
       }
-      let sourceFileUrl = '';
-      if (ctx.input.parameters.pushToGit && sourceInfo.gitRepo) {
+
+      // Write the manifest to the file system for each cluster
+      const filePaths: string[] = [];
+      const kubernetesConfig = config.getOptionalConfig('kubernetes');
+      const clusterLocatorMethods = kubernetesConfig.getOptionalConfigArray('clusterLocatorMethods');
+      const clustersConfig = clusterLocatorMethods[0].getOptionalConfigArray('clusters');
+
+      ctx.input.clusters.forEach(cluster => {
+        const clusterConfig = clustersConfig.find((c: any) => c.getString('name') === cluster);
+        const gitRepoPath = clusterConfig.getOptionalString('gitFilePathPattern') || "state/$$Cluster/$$Kind-$$Namespace-$$Name";
+        const filePath = gitRepoPath
+          .replace('$$Cluster', cluster)
+          .replace('$$Kind', ctx.input.kind)
+          .replace('$$Namespace', ctx.input.parameters[ctx.input.namespaceParam])
+          .replace('$$Name', ctx.input.parameters[ctx.input.nameParam]) + ".yaml";
+
+        const destFilepath = resolveSafeChildPath(ctx.workspacePath, filePath);
+
+        let sourceFileUrl = '';
         const gitUrl = new URL("https://" + sourceInfo.gitRepo);
         const owner = gitUrl.searchParams.get('owner');
         const repo = gitUrl.searchParams.get('repo');
         if (owner && repo) {
-          sourceFileUrl = `https://${gitUrl.host}/${owner}/${repo}/blob/${sourceInfo.gitBranch}/${sourceInfo.basePath}/${ctx.input.parameters[ctx.input.nameParam]}.yaml`;
+          sourceFileUrl = `https://${gitUrl.host}/${owner}/${repo}/blob/${sourceInfo.gitBranch}/${filePath}`;
         }
-      }
 
-      // Template the Kubernetes resource manifest
-      const manifest = {
-        apiVersion: ctx.input.apiVersion,
-        kind: ctx.input.kind,
-        metadata: {
-          annotations: {
-            'upbound.backstage.io/source-info': JSON.stringify(sourceInfo),
-            'upbound.backstage.io/add-to-catalog': "true",
-            'upbound.backstage.io/owner': ctx.input.parameters[ctx.input.ownerParam],
-            'upbound.backstage.io/system': ctx.input.parameters[ctx.input.namespaceParam],
-            ...(sourceFileUrl && { 'upbound.backstage.io/source-file-url': sourceFileUrl }),
+        const manifestYaml = yaml.dump({
+          apiVersion: ctx.input.apiVersion,
+          kind: ctx.input.kind,
+          metadata: {
+            annotations: {
+              'upbound.backstage.io/source-info': JSON.stringify(sourceInfo),
+              'upbound.backstage.io/add-to-catalog': "true",
+              'upbound.backstage.io/owner': ctx.input.parameters[ctx.input.ownerParam],
+              'upbound.backstage.io/system': ctx.input.parameters[ctx.input.namespaceParam],
+              ...(sourceFileUrl && { 'upbound.backstage.io/source-file-url': sourceFileUrl }),
+            },
+            name: ctx.input.parameters[ctx.input.nameParam],
+            namespace: ctx.input.parameters[ctx.input.namespaceParam],
           },
-          name: ctx.input.parameters[ctx.input.nameParam],
-          namespace: ctx.input.parameters[ctx.input.namespaceParam],
-        },
-        spec: filteredParameters,
-      };
+          spec: filteredParameters,
+        });
 
-      // Convert manifest to YAML
-      const manifestYaml = yaml.dump(manifest);
-
-      // Write the manifest to the file system for each cluster
-      const filePaths: string[] = [];
-      ctx.input.clusters.forEach(cluster => {
-        const filePath = path.join(
-          cluster,
-          ctx.input.parameters[ctx.input.namespaceParam],
-          ctx.input.kind,
-          `${ctx.input.parameters[ctx.input.nameParam]}.yaml`
-        );
-        const destFilepath = resolveSafeChildPath(ctx.workspacePath, filePath);
         fs.outputFileSync(destFilepath, manifestYaml);
         ctx.logger.info(`Manifest written to ${destFilepath}`);
         filePaths.push(destFilepath);
-      });
 
-      // Output the manifest and file paths
-      ctx.output('manifest', manifestYaml);
-      ctx.output('filePaths', filePaths);
+        // Output the manifest and file paths
+        ctx.output('manifest', manifestYaml);
+        ctx.output('filePaths', filePaths);
+      });
     },
   });
 }
