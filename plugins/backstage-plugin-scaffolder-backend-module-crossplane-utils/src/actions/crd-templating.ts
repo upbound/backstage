@@ -2,7 +2,6 @@ import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
 import { resolveSafeChildPath } from '@backstage/backend-plugin-api';
 import yaml from 'js-yaml';
 import fs from 'fs-extra';
-import path from 'path';
 
 export function createCrdTemplateAction({config}: {config: any}) {
   return createTemplateAction<{
