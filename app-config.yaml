@@ -60,11 +60,13 @@ kubernetes:
       upbound: {}
   clusterLocatorMethods:
   - clusters:
-    - authMetadata:
+    - name: solution-idp-non-prod-frontend-frontend
+      authMetadata:
         upbound.io/organization: ${UP_ORG}
         upbound.io/token: ${UP_ROBOT_TOKEN}
       authProvider: upbound
-      name: solution-idp-non-prod-frontend-frontend
+      # $$Server, $$Kind, $$Namespace, $$Name is supported
+      gitFilePathPattern: "state/solution-idp-non-prod/frontend/30-claims/$$Kind-$$Namespace-$$Name"
       skipMetricsLookup: true
       skipTLSVerify: true
       url: ${UP_CTP_URL}

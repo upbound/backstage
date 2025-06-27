@@ -140,7 +140,7 @@ import {
         throw new Error('Invalid XRD object');
       }
 
-      const clusters = xrd.clusters || ["kubetopus"];
+      const clusters = xrd.clusters;
 
       const templates = xrd.spec.versions.map((version: { name: any }) => {
         const parameters = this.extractParameters(version, clusters, xrd);
@@ -860,53 +860,19 @@ import {
                       description: "Target Branch for the PR",
                       default: "main"
                     },
-                    manifestLayout: {
-                      type: "string",
-                      description: "Layout of the manifest",
-                      default: "cluster-scoped",
-                      "ui:help": "Choose how the manifest should be generated in the repo.\n* Cluster-scoped - a manifest is created for each selected cluster under the root directory of the clusters name\n* namespace-scoped - a manifest is created for the resource under the root directory with the namespace name\n* custom - a manifest is created under the specified base path",
-                      enum: ["cluster-scoped", "namespace-scoped", "custom"]
-                    }
+                    clusters: {
+                      title: "Target Clusters",
+                      description: "The target clusters to apply the resource to",
+                      type: "array",
+                      minItems: 1,
+                      items: {
+                        enum: clusters,
+                        type: 'string',
+                      },
+                      uniqueItems: true,
+                      'ui:widget': 'checkboxes',
+                    },
                   },
-                  dependencies: {
-                    manifestLayout: {
-                      oneOf: [
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["cluster-scoped"] },
-                            clusters: {
-                              title: "Target Clusters",
-                              description: "The target clusters to apply the resource to",
-                              type: "array",
-                              minItems: 1,
-                              items: {
-                                enum: clusters,
-                                type: 'string',
-                              },
-                              uniqueItems: true,
-                              'ui:widget': 'checkboxes',
-                            },
-                          },
-                          required: ["clusters"]
-                        },
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["custom"] },
-                            basePath: {
-                              type: "string",
-                              description: "Base path in GitOps repository to push the manifest to"
-                            }
-                          },
-                          required: ["basePath"]
-                        },
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["namespace-scoped"] }
-                          }
-                        }
-                      ]
-                    }
-                  }
                 }
               ]
             }
@@ -932,53 +898,19 @@ import {
                 {
                   properties: {
                     pushToGit: { enum: [true] },
-                    manifestLayout: {
-                      type: "string",
-                      description: "Layout of the manifest",
-                      default: "cluster-scoped",
-                      "ui:help": "Choose how the manifest should be generated in the repo.\n* Cluster-scoped - a manifest is created for each selected cluster under the root directory of the clusters name\n* namespace-scoped - a manifest is created for the resource under the root directory with the namespace name\n* custom - a manifest is created under the specified base path",
-                      enum: ["cluster-scoped", "namespace-scoped", "custom"]
-                    }
+                    clusters: {
+                      title: "Target Clusters",
+                      description: "The target clusters to apply the resource to",
+                      type: "array",
+                      minItems: 1,
+                      items: {
+                        enum: clusters,
+                        type: 'string',
+                      },
+                      uniqueItems: true,
+                      'ui:widget': 'checkboxes',
+                    },
                   },
-                  dependencies: {
-                    manifestLayout: {
-                      oneOf: [
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["cluster-scoped"] },
-                            clusters: {
-                              title: "Target Clusters",
-                              description: "The target clusters to apply the resource to",
-                              type: "array",
-                              minItems: 1,
-                              items: {
-                                enum: clusters,
-                                type: 'string',
-                              },
-                              uniqueItems: true,
-                              'ui:widget': 'checkboxes',
-                            },
-                          },
-                          required: ["clusters"]
-                        },
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["custom"] },
-                            basePath: {
-                              type: "string",
-                              description: "Base path in GitOps repository to push the manifest to"
-                            }
-                          },
-                          required: ["basePath"]
-                        },
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["namespace-scoped"] }
-                          }
-                        }
-                      ]
-                    }
-                  }
                 }
               ]
             }
@@ -999,27 +931,11 @@ import {
           nameParam: xrName
           namespaceParam: xrNamespace
           ownerParam: owner
-          excludeParams: ['owner', 'compositionSelectionStrategy','pushToGit','basePath','manifestLayout','_editData', 'targetBranch', 'repoUrl', 'clusters', "xrName", "xrNamespace"]
+          excludeParams: ['owner', 'compositionSelectionStrategy','pushToGit','basePath', '_editData', 'targetBranch', 'repoUrl', 'clusters', "xrName", "xrNamespace"]
           apiVersion: {API_VERSION}
           kind: {KIND}
-          clusters: \${{ parameters.clusters if parameters.manifestLayout === 'cluster-scoped' and parameters.pushToGit else ['temp'] }}
+          clusters: \${{ parameters.clusters }}
           removeEmptyParams: true
-      - id: moveNamespacedManifest
-        name: Move and Rename Manifest
-        if: \${{ parameters.manifestLayout === 'namespace-scoped' }}
-        action: fs:rename
-        input:
-          files:
-            - from: \${{ steps.generateManifest.output.filePaths[0] }}
-              to: "./\${{ parameters.xrNamespace }}/\${{ steps.generateManifest.input.kind }}/\${{ steps.generateManifest.output.filePaths[0].split('/').pop() }}"
-      - id: moveCustomManifest
-        name: Move and Rename Manifest
-        if: \${{ parameters.manifestLayout === 'custom' }}
-        action: fs:rename
-        input:
-          files:
-            - from: \${{ steps.generateManifest.output.filePaths[0] }}
-              to: "./\${{ parameters.basePath }}/\${{ parameters.xrName }}.yaml"
     `;
       const publishPhaseTarget = this.config.getOptionalString('kubernetesIngestor.crossplane.xrds.publishPhase.target')?.toLowerCase();
       let action = '';
@@ -1593,53 +1509,19 @@ import {
                       description: "Target Branch for the PR",
                       default: "main"
                     },
-                    manifestLayout: {
-                      type: "string",
-                      description: "Layout of the manifest",
-                      default: "cluster-scoped",
-                      "ui:help": "Choose how the manifest should be generated in the repo.\n* Cluster-scoped - a manifest is created for each selected cluster under the root directory of the clusters name\n* namespace-scoped - a manifest is created for the resource under the root directory with the namespace name\n* custom - a manifest is created under the specified base path",
-                      enum: ["cluster-scoped", "namespace-scoped", "custom"]
-                    }
+                    clusters: {
+                      title: "Target Clusters",
+                      description: "The target clusters to apply the resource to",
+                      type: "array",
+                      minItems: 1,
+                      items: {
+                        enum: clusters,
+                        type: 'string',
+                      },
+                      uniqueItems: true,
+                      'ui:widget': 'checkboxes',
+                    },
                   },
-                  dependencies: {
-                    manifestLayout: {
-                      oneOf: [
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["cluster-scoped"] },
-                            clusters: {
-                              title: "Target Clusters",
-                              description: "The target clusters to apply the resource to",
-                              type: "array",
-                              minItems: 1,
-                              items: {
-                                enum: clusters,
-                                type: 'string',
-                              },
-                              uniqueItems: true,
-                              'ui:widget': 'checkboxes',
-                            },
-                          },
-                          required: ["clusters"]
-                        },
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["custom"] },
-                            basePath: {
-                              type: "string",
-                              description: "Base path in GitOps repository to push the manifest to"
-                            }
-                          },
-                          required: ["basePath"]
-                        },
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["namespace-scoped"] }
-                          }
-                        }
-                      ]
-                    }
-                  }
                 }
               ]
             }
@@ -1665,53 +1547,19 @@ import {
                 {
                   properties: {
                     pushToGit: { enum: [true] },
-                    manifestLayout: {
-                      type: "string",
-                      description: "Layout of the manifest",
-                      default: "cluster-scoped",
-                      "ui:help": "Choose how the manifest should be generated in the repo.\n* Cluster-scoped - a manifest is created for each selected cluster under the root directory of the clusters name\n* namespace-scoped - a manifest is created for the resource under the root directory with the namespace name\n* custom - a manifest is created under the specified base path",
-                      enum: ["cluster-scoped", "namespace-scoped", "custom"]
-                    }
+                    clusters: {
+                      title: "Target Clusters",
+                      description: "The target clusters to apply the resource to",
+                      type: "array",
+                      minItems: 1,
+                      items: {
+                        enum: clusters,
+                        type: 'string',
+                      },
+                      uniqueItems: true,
+                      'ui:widget': 'checkboxes',
+                    },
                   },
-                  dependencies: {
-                    manifestLayout: {
-                      oneOf: [
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["cluster-scoped"] },
-                            clusters: {
-                              title: "Target Clusters",
-                              description: "The target clusters to apply the resource to",
-                              type: "array",
-                              minItems: 1,
-                              items: {
-                                enum: clusters,
-                                type: 'string',
-                              },
-                              uniqueItems: true,
-                              'ui:widget': 'checkboxes',
-                            },
-                          },
-                          required: ["clusters"]
-                        },
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["custom"] },
-                            basePath: {
-                              type: "string",
-                              description: "Base path in GitOps repository to push the manifest to"
-                            }
-                          },
-                          required: ["basePath"]
-                        },
-                        {
-                          properties: {
-                            manifestLayout: { enum: ["namespace-scoped"] }
-                          }
-                        }
-                      ]
-                    }
-                  }
                 }
               ]
             }
@@ -1730,27 +1578,11 @@ import {
           parameters: \${{ parameters }}
           nameParam: name
           namespaceParam: ${crd.spec.scope === 'Namespaced' ? 'namespace' : undefined}
-          excludeParams: ['pushToGit','basePath','manifestLayout','_editData', 'targetBranch', 'repoUrl', 'clusters', 'name', 'namespace', 'owner']
+          excludeParams: ['pushToGit','basePath',,'_editData', 'targetBranch', 'repoUrl', 'clusters', 'name', 'namespace', 'owner']
           apiVersion: ${crd.spec.group}/${version.name}
           kind: ${crd.spec.names.kind}
-          clusters: \${{ parameters.clusters if parameters.manifestLayout === 'cluster-scoped' and parameters.pushToGit else ['temp'] }}
+          clusters: \${{ parameters.clusters }}
           removeEmptyParams: true
-      - id: moveNamespacedManifest
-        name: Move and Rename Manifest
-        if: \${{ parameters.manifestLayout === 'namespace-scoped' }}
-        action: fs:rename
-        input:
-          files:
-            - from: \${{ steps.generateManifest.output.filePaths[0] }}
-              to: "./\${{ parameters.namespace }}/\${{ steps.generateManifest.input.kind }}/\${{ steps.generateManifest.output.filePaths[0].split('/').pop() }}"
-      - id: moveCustomManifest
-        name: Move and Rename Manifest
-        if: \${{ parameters.manifestLayout === 'custom' }}
-        action: fs:rename
-        input:
-          files:
-            - from: \${{ steps.generateManifest.output.filePaths[0] }}
-              to: "./\${{ parameters.basePath }}/\${{ parameters.name }}.yaml"
     `;
 
       const publishPhaseTarget = this.config.getOptionalString('kubernetesIngestor.genericCRDTemplates.publishPhase.target')?.toLowerCase();
